@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <title>Shipment Notice — Mobile Compatible</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Tiro+Bangla&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @font-face {
+        font-family: "SutonnyMJ";
+        src: url("./fonts/SutonnyMJ.ttf") format("truetype");
+      }
+
+      body {
+        margin: 0;
+        font-family: "SutonnyMJ", sans-serif;
+        background: #f6f7fb;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 20px;
+        justify-content: center;
+      }
+
+      .board {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        aspect-ratio: 500 / 700;
+        background: url("./images/notice_template.png") center/cover no-repeat;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+      }
+
+      .text-chip {
+        position: absolute;
+        font-size: 22px;
+        font-weight: bold;
+        color: #d90429;
+        font-family: "SutonnyMJ", sans-serif;
+      }
+
+      .air-day,
+      .sea-day {
+        font-family: "Tiro Bangla", sans-serif;
+        font-size: 20px;
+      }
+
+      .air-date {
+        top: 67.9%;
+        left: 36.5%;
+      }
+      .air-day {
+        top: 67.9%;
+        left: 58%;
+      }
+      .sea-date {
+        top: 72%;
+        left: 36.5%;
+      }
+      .sea-day {
+        top: 72.2%;
+        left: 58%;
+      }
+
+      .form {
+        flex: 1;
+        min-width: 250px;
+        max-width: 350px;
+        background: #fff;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+      }
+
+      .form label {
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 4px;
+        font-weight: bold;
+      }
+      .form input {
+        width: 100%;
+        padding: 6px;
+        font-size: 16px;
+        font-family: "SutonnyMJ", sans-serif;
+      }
+      .form button {
+        margin-top: 12px;
+        padding: 10px 16px;
+        background: #d90429;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        display: block;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="board" id="template">
+      <div class="overlay">
+        <div class="text-chip air-date" id="airDateText">28/08/2025</div>
+        <div class="text-chip air-day" id="airDayText">বৃহস্পতিবার</div>
+        <div class="text-chip sea-date" id="seaDateText">29/08/2025</div>
+        <div class="text-chip sea-day" id="seaDayText">শুক্রবার</div>
+      </div>
+    </div>
+
+    <div class="form">
+      <h2>তারিখ লিখুন</h2>
+      <label>✈তারিখ</label>
+      <input type="text" id="airDateInput" value="28/08/2025" />
+      <label>🚢 তারিখ</label>
+      <input type="text" id="seaDateInput" value="29/08/2025" />
+      <button onclick="downloadPNG()">⬇️ PNG Download</button>
+      <button onclick="downloadPDF()">⬇️ PDF Download</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      const daysBn = [
+        "রবিবার",
+        "সোমবার",
+        "মঙ্গলবার",
+        "বুধবার",
+        "বৃহস্পতিবার",
+        "শুক্রবার",
+        "শনিবার",
+      ];
+
+      function getDayName(dateStr) {
+        const parts = dateStr.split("/");
+        if (parts.length === 3) {
+          const [d, m, y] = parts.map((x) => parseInt(x));
+          const dt = new Date(y, m - 1, d);
+          if (!isNaN(dt)) return daysBn[dt.getDay()];
+        }
+        return "";
+      }
+
+      const airDateInput = document.getElementById("airDateInput");
+      const seaDateInput = document.getElementById("seaDateInput");
+
+      function updateText() {
+        document.getElementById("airDateText").textContent = airDateInput.value;
+        document.getElementById("seaDateText").textContent = seaDateInput.value;
+        document.getElementById("airDayText").textContent = getDayName(
+          airDateInput.value
+        );
+        document.getElementById("seaDayText").textContent = getDayName(
+          seaDateInput.value
+        );
+      }
+
+      airDateInput.addEventListener("input", updateText);
+      seaDateInput.addEventListener("input", updateText);
+      updateText();
+
+      async function renderCanvas() {
+        const img = new Image();
+        img.src = "./images/notice_template.png";
+        await new Promise((r) => (img.onload = r));
+        await document.fonts.ready;
+
+        const scale = window.devicePixelRatio || 1;
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth * scale;
+        canvas.height = img.naturalHeight * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+
+        const positions = [
+          { id: "airDateText", x: 0.365, y: 0.679 },
+          { id: "airDayText", x: 0.58, y: 0.679 },
+          { id: "seaDateText", x: 0.365, y: 0.72 },
+          { id: "seaDayText", x: 0.58, y: 0.722 },
+        ];
+
+        ctx.fillStyle = "#d90429";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+
+        positions.forEach((pos) => {
+          const el = document.getElementById(pos.id);
+          const fontSize = (canvas.height / scale) * 0.03;
+          ctx.font =
+            pos.id === "airDayText" || pos.id === "seaDayText"
+              ? `${fontSize}px Tiro Bangla`
+              : `${fontSize}px SutonnyMJ`;
+          ctx.fillText(
+            el.textContent,
+            img.naturalWidth * pos.x,
+            img.naturalHeight * pos.y
+          );
+        });
+
+        return canvas;
+      }
+
+      async function downloadPNG() {
+        const canvas = await renderCanvas();
+        const link = document.createElement("a");
+        link.download = "shipment_notice.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }
+
+      async function downloadPDF() {
+        const canvas = await renderCanvas();
+        const imgData = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "pt", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgWidth = pageWidth - 40;
+        const imgHeight =
+          ((canvas.height / (window.devicePixelRatio || 1)) * imgWidth) /
+          canvas.width;
+        pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+        pdf.save("shipment_notice.pdf");
+      }
+    </script>
+  </body>
+</html>
