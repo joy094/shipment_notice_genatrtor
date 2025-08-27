@@ -12,7 +12,12 @@
         font-family: "SutonnyMJ";
         src: url("./fonts/SutonnyMJ.ttf") format("truetype");
       }
-
+      @font-face {
+        font-family: "SutonnyOMJ";
+        src: url("./fonts/SutonnyOMJ.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
       body {
         margin: 0;
         font-family: "SutonnyMJ", sans-serif;
@@ -52,6 +57,7 @@
       .sea-day {
         font-family: "Tiro Bangla", sans-serif;
         font-size: 20px;
+        font-family: "SutonnyOMJ", sans-serif;
       }
 
       .air-date {
@@ -59,7 +65,7 @@
         left: 36.5%;
       }
       .air-day {
-        top: 67.9%;
+        top: 68.3%;
         left: 58%;
       }
       .sea-date {
@@ -67,7 +73,7 @@
         left: 36.5%;
       }
       .sea-day {
-        top: 72.2%;
+        top: 72.4%;
         left: 58%;
       }
 
@@ -80,6 +86,7 @@
         border-radius: 12px;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
         height: fit-content;
+        font-family: "SutonnyOMJ", sans-serif;
       }
 
       .form label {
@@ -93,6 +100,7 @@
         padding: 6px;
         font-size: 16px;
         font-family: "SutonnyMJ", sans-serif;
+        height: 36px;
       }
       .form button {
         margin-top: 12px;
@@ -132,14 +140,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       const daysBn = [
-        "রবিবার",
-        "সোমবার",
-        "মঙ্গলবার",
-        "বুধবার",
-        "বৃহস্পতিবার",
-        "শুক্রবার",
+        "_রবিবার ",
+        "_সোমবার ",
+        "_মঙ্গলবার ",
+        "_বুধবার",
+        "_বৃহস্পতিবার",
+        "_শুক্রবার",
         "শনিবার",
       ];
+
+      function updateAirDayText() {
+        const airDayEl = document.getElementById("airDayText");
+        airDayEl.textContent = getDayName(airDateInput.value) + " এবং";
+      }
 
       function getDayName(dateStr) {
         const parts = dateStr.split("/");
@@ -157,9 +170,14 @@
       function updateText() {
         document.getElementById("airDateText").textContent = airDateInput.value;
         document.getElementById("seaDateText").textContent = seaDateInput.value;
-        document.getElementById("airDayText").textContent = getDayName(
-          airDateInput.value
-        );
+
+        // air day + "এবং"
+        document.getElementById("airDayText").textContent =
+          getDayName(airDateInput.value) + " এবং";
+          document.getElementById("airDayText").innerHTML =
+  getDayName(airDateInput.value) + ' <span style="color:#0000ff;">এবং</span>';
+
+
         document.getElementById("seaDayText").textContent = getDayName(
           seaDateInput.value
         );
@@ -194,19 +212,43 @@
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
 
-        positions.forEach((pos) => {
-          const el = document.getElementById(pos.id);
-          const fontSize = (canvas.height / scale) * 0.03;
-          ctx.font =
-            pos.id === "airDayText" || pos.id === "seaDayText"
-              ? `${fontSize}px Tiro Bangla`
-              : `${fontSize}px SutonnyMJ`;
-          ctx.fillText(
-            el.textContent,
-            img.naturalWidth * pos.x,
-            img.naturalHeight * pos.y
-          );
-        });
+     positions.forEach((pos) => {
+  const el = document.getElementById(pos.id);
+  const fontSize = (canvas.height / scale) * 0.03;
+
+  ctx.font =
+    pos.id === "airDayText" || pos.id === "seaDayText"
+      ? `bold ${fontSize}px SutonnyOMJ`
+      : `bold ${fontSize}px SutonnyMJ`;
+
+  // color নির্ধারণ
+  if (pos.id === "airDateText" || pos.id === "seaDateText") {
+    ctx.fillStyle = "#d90429"; // লাল
+  } else if (pos.id === "airDayText" && el.textContent.includes("এবং")) {
+    // split day & "এবং"
+    const parts = el.textContent.split(" এবং");
+    // day কালো
+    ctx.fillStyle = "#000000";
+    ctx.fillText(parts[0], img.naturalWidth * pos.x, img.naturalHeight * pos.y);
+    // "এবং" লাল
+    ctx.fillStyle = "#0000ff";
+    const dayWidth = ctx.measureText(parts[0]).width;
+    ctx.fillText(
+      " এবং",
+      img.naturalWidth * pos.x + dayWidth,
+      img.naturalHeight * pos.y
+    );
+    return; // পরের fillText skip
+  } else {
+    ctx.fillStyle = "#000000"; // অন্যান্য text কালো
+  }
+
+  ctx.fillText(
+    el.textContent,
+    img.naturalWidth * pos.x,
+    img.naturalHeight * pos.y
+  );
+});
 
         return canvas;
       }
